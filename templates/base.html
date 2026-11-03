@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}StokPintar{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<nav class="navbar navbar-expand-lg app-navbar">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+      <i class="bi bi-box-seam-fill"></i> Stok<span class="navbar-brand-accent">Pintar</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint in ['products','product_new','product_detail','product_edit'] %}active{% endif %}" href="{{ url_for('products') }}">
+            <i class="bi bi-boxes"></i> Produk
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint in ['reports', 'export_excel', 'export_pdf'] %}active{% endif %}" href="{{ url_for('reports') }}">
+            <i class="bi bi-file-earmark-arrow-down"></i> Laporan
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint in ['restock', 'export_restock_csv'] %}active{% endif %}" href="{{ url_for('restock') }}">
+            <i class="bi bi-cart-check"></i> Daftar Restock
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'stocktake' %}active{% endif %}" href="{{ url_for('stocktake') }}">
+            <i class="bi bi-clipboard-check"></i> Stok Opname
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'purchase_orders' %}active{% endif %}" href="{{ url_for('purchase_orders') }}">
+            <i class="bi bi-receipt"></i> Pesanan
+          </a>
+        </li>
+        {% if current_user.role == 'admin' %}
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'suppliers' %}active{% endif %}" href="{{ url_for('suppliers') }}">
+            <i class="bi bi-truck"></i> Supplier
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'users' %}active{% endif %}" href="{{ url_for('users') }}">
+            <i class="bi bi-people"></i> Pengguna
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+      <div class="d-flex align-items-center gap-3">
+        <span class="text-light-50 small"><i class="bi bi-person-circle"></i> {{ current_user.name }} <span class="opacity-75">({{ 'Admin' if current_user.role == 'admin' else 'Staf' }})</span></span>
+        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light">Keluar</a>
+      </div>
+    </div>
+  </div>
+</nav>
+{% endif %}
+
+<div class="container-fluid px-4 py-4">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Stok Opname — StokPintar{% endblock %}
+{% block content %}
+
+<div class="page-heading mb-4">
+  <span class="eyebrow"><i class="bi bi-clipboard-check"></i> Audit inventaris</span>
+  <h1 class="h3 fw-bold mb-1">Stok Opname</h1>
+  <p class="text-muted mb-0">Cocokkan stok di aplikasi dengan hitungan fisik. Selisih tercatat di riwayat produk.</p>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="h6 fw-bold mb-3">Catat hasil hitung</h2>
+        {% if products %}
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label" for="stocktake-product">Produk</label>
+            <select id="stocktake-product" name="product_id" class="form-select" required>
+              <option value="">Pilih produk</option>
+              {% for product in products %}
+              <option value="{{ product.id }}">{{ product.name }} · {{ product.sku }} (catatan: {{ product.stock }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="counted-stock">Jumlah fisik yang dihitung</label>
+            <input id="counted-stock" type="number" name="counted_stock" class="form-control" min="0" max="2147483647" step="1" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="stocktake-reason">Alasan / catatan</label>
+            <textarea id="stocktake-reason" name="reason" class="form-control" maxlength="160" rows="3" required placeholder="Contoh: hasil hitung rak A pada 3 November"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-check2-circle"></i> Simpan hasil opname
+          </button>
+        </form>
+        {% else %}
+        <div class="text-muted small">Belum ada produk untuk dihitung.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="restock-summary">
+      <div class="fw-bold mb-2"><i class="bi bi-info-circle"></i> Cara kerja penyesuaian</div>
+      <ul class="small text-muted mb-0 ps-3">
+        <li>Masukkan jumlah barang yang benar-benar dihitung.</li>
+        <li>Aplikasi menghitung selisih terhadap stok tercatat.</li>
+        <li>Stok diperbarui dan catatan audit menyimpan pengguna, waktu, selisih, serta alasan.</li>
+        <li>Pengurangan stok opname tidak boleh membuat jumlah stok negatif.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

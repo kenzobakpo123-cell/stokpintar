@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Daftar Restock — StokPintar{% endblock %}
+{% block content %}
+
+<div class="page-heading d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+  <div>
+    <span class="eyebrow"><i class="bi bi-box-seam"></i> Tindakan inventaris</span>
+    <h1 class="h3 fw-bold mb-1">Daftar Restock</h1>
+    <p class="text-muted mb-0">Produk yang stoknya sudah mencapai atau melewati batas minimum.</p>
+  </div>
+  <a href="{{ url_for('export_restock_csv') }}" class="btn btn-primary">
+    <i class="bi bi-download"></i> Unduh daftar CSV
+  </a>
+</div>
+
+<div class="restock-summary d-flex align-items-center gap-3 mb-4">
+  <div class="stat-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-exclamation-triangle"></i></div>
+  <div>
+    <div class="fw-bold">{{ rows|length }} produk perlu perhatian</div>
+    <div class="small text-muted">Jumlah usulan mengisi stok sampai batas minimum, bukan pesanan supplier.</div>
+  </div>
+</div>
+
+<div class="card dashboard-card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th class="ps-4">Produk</th>
+          <th>Kategori</th>
+          <th>Stok saat ini</th>
+          <th>Stok minimum</th>
+          <th class="pe-4">Usulan tambah stok</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td class="ps-4">
+            <a href="{{ url_for('product_detail', product_id=row.product.id) }}" class="text-decoration-none fw-semibold">
+              {{ row.product.name }}
+            </a>
+            <div class="small text-muted mono">{{ row.product.sku }}</div>
+          </td>
+          <td>{{ row.product.category }}</td>
+          <td><span class="badge badge-soft-danger">{{ row.product.stock }}</span></td>
+          <td>{{ row.product.min_stock }}</td>
+          <td class="pe-4 fw-bold text-primary">+{{ row.suggested_quantity }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="text-center py-5">
+            <div class="empty-state-icon mb-2"><i class="bi bi-check2-circle"></i></div>
+            <div class="fw-semibold">Semua stok dalam batas aman</div>
+            <div class="small text-muted">Produk yang perlu direstock akan muncul di sini.</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Pesanan Pembelian — StokPintar{% endblock %}
+{% block content %}
+
+<div class="page-heading d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+  <div>
+    <span class="eyebrow"><i class="bi bi-receipt"></i> Pengadaan</span>
+    <h1 class="h3 fw-bold mb-1">Pesanan Pembelian</h1>
+    <p class="text-muted mb-0">Lacak pesanan supplier sampai barang diterima dan stok bertambah.</p>
+  </div>
+  {% if current_user.role == 'admin' %}
+  <a class="btn btn-outline-primary" href="{{ url_for('suppliers') }}"><i class="bi bi-truck"></i> Kelola supplier</a>
+  {% endif %}
+</div>
+
+{% if current_user.role == 'admin' %}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-4">
+    <h2 class="h6 fw-bold mb-3">Buat pesanan</h2>
+    {% if suppliers and products %}
+    <form method="POST" class="row g-3 align-items-end">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label" for="order-supplier">Supplier</label>
+        <select id="order-supplier" name="supplier_id" class="form-select" required>
+          <option value="">Pilih supplier</option>
+          {% for supplier in suppliers %}<option value="{{ supplier.id }}">{{ supplier.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label" for="order-product">Produk</label>
+        <select id="order-product" name="product_id" class="form-select" required>
+          <option value="">Pilih produk</option>
+          {% for product in products %}<option value="{{ product.id }}">{{ product.name }} ({{ product.sku }})</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label" for="order-quantity">Jumlah</label>
+        <input id="order-quantity" type="number" min="1" max="2147483647" name="quantity" class="form-control" required>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label" for="order-status">Status awal</label>
+        <select id="order-status" name="status" class="form-select">
+          <option value="draft">Draft</option>
+          <option value="ordered">Dipesan</option>
+        </select>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <label class="form-label" for="order-note">Catatan</label>
+        <input id="order-note" name="note" class="form-control" maxlength="200" placeholder="Opsional">
+      </div>
+      <div class="col-12"><button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg"></i> Buat pesanan</button></div>
+    </form>
+    {% else %}
+    <p class="small text-muted mb-0">
+      Tambahkan minimal satu supplier dan produk sebelum membuat pesanan.
+      {% if not suppliers %}<a href="{{ url_for('suppliers') }}">Tambah supplier</a>{% endif %}
+      {% if not products %}<a href="{{ url_for('products') }}">Tambah produk</a>{% endif %}
+    </p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th class="ps-4">Pesanan</th><th>Supplier</th><th>Produk</th><th>Jumlah</th><th>Status</th><th>Dibuat oleh</th><th class="pe-4">Aksi</th></tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td class="ps-4">
+            <strong>#{{ order.id }}</strong>
+            <div class="small text-muted">{{ order.created_at.strftime('%d %b %Y, %H:%M') }}</div>
+          </td>
+          <td>{{ order.supplier.name }}</td>
+          <td>
+            <a href="{{ url_for('product_detail', product_id=order.product.id) }}" class="product-row-link fw-semibold">{{ order.product.name }}</a>
+            <div class="small text-muted mono">{{ order.product.sku }}</div>
+          </td>
+          <td>{{ order.quantity }}</td>
+          <td>
+            {% if order.status == 'received' %}
+              <span class="badge badge-soft-success">Diterima</span>
+            {% elif order.status == 'ordered' %}
+              <span class="badge badge-soft-warning">Dipesan</span>
+            {% elif order.status == 'cancelled' %}
+              <span class="badge badge-soft-danger">Dibatalkan</span>
+            {% else %}
+              <span class="badge bg-secondary-subtle text-secondary">Draft</span>
+            {% endif %}
+            {% if order.received_by %}
+            <div class="small text-muted mt-1">oleh {{ order.received_by.name }}</div>
+            {% endif %}
+          </td>
+          <td class="small">{{ order.created_by.name }}</td>
+          <td class="pe-4">
+            {% if order.status in ['draft', 'ordered'] %}
+              {% if current_user.role == 'admin' and order.status == 'draft' %}
+              <form method="POST" action="{{ url_for('purchase_order_status', order_id=order.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="ordered">
+                <button class="btn btn-sm btn-outline-primary" type="submit">Tandai dipesan</button>
+              </form>
+              {% endif %}
+              {% if order.status == 'ordered' %}
+              <form method="POST" action="{{ url_for('purchase_order_status', order_id=order.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="received">
+                <button class="btn btn-sm btn-primary" type="submit">Terima barang</button>
+              </form>
+              {% endif %}
+              {% if current_user.role == 'admin' %}
+              <form method="POST" action="{{ url_for('purchase_order_status', order_id=order.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="cancelled">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Batalkan</button>
+              </form>
+              {% endif %}
+            {% else %}
+              <span class="small text-muted">Selesai</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-5">Belum ada pesanan pembelian.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

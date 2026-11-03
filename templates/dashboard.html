@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — StokPintar{% endblock %}
+{% block content %}
+
+<div class="dashboard-heading d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <span class="eyebrow"><i class="bi bi-sun"></i> Ringkasan inventaris</span>
+    <h1 class="h3 fw-bold mb-1">Dashboard</h1>
+    <p class="text-muted mb-0">Ringkasan inventaris &amp; rekomendasi restock hari ini</p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('restock') }}" class="btn btn-outline-primary">
+      <i class="bi bi-cart-check"></i> Daftar Restock
+    </a>
+    {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('product_new') }}" class="btn btn-primary">
+      <i class="bi bi-plus-lg"></i> Tambah Produk
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card stat-card-primary">
+      <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-boxes"></i></div>
+      <div>
+        <div class="stat-value">{{ total_products }}</div>
+        <div class="stat-label">Total Produk</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card stat-card-success">
+      <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-cash-stack"></i></div>
+      <div>
+        <div class="stat-value">Rp{{ "{:,.0f}".format(total_stock_value).replace(',', '.') }}</div>
+        <div class="stat-label">Nilai Total Stok</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card stat-card-danger">
+      <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-exclamation-triangle"></i></div>
+      <div>
+        <div class="stat-value">{{ critical_count }}</div>
+        <div class="stat-label">Produk Stok Kritis</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card dashboard-card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-0 pt-3 px-4">
+    <h2 class="h6 fw-bold mb-0"><i class="bi bi-bar-chart-line text-primary"></i> Tren Transaksi Stok</h2>
+    <p class="text-muted small mb-0">Jumlah stok masuk dan keluar per hari selama 14 hari terakhir.</p>
+  </div>
+  <div class="card-body px-4">
+    <div class="chart-container"
+         id="stockTrendChart"
+         data-labels='{{ chart_labels|tojson }}'
+         data-stock-in='{{ chart_in|tojson }}'
+         data-stock-out='{{ chart_out|tojson }}'
+         aria-label="Grafik tren transaksi stok 14 hari terakhir">
+      <canvas></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white border-0 pt-3 px-4">
+    <h2 class="h6 fw-bold mb-0"><i class="bi bi-graph-up-arrow text-primary"></i> Rekomendasi Restock (diurutkan otomatis by urgensi)</h2>
+    <p class="text-muted small mb-0">Diurutkan pakai algoritma merge sort berdasarkan skor urgensi (stok, batas minimum, kecepatan penjualan).</p>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th class="ps-4">Produk</th>
+          <th>Stok</th>
+          <th>Min. Stok</th>
+          <th>Rata² Terjual/Hari</th>
+          <th>Prediksi Habis</th>
+          <th class="pe-4">Skor Urgensi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in ranked %}
+        <tr>
+          <td class="ps-4">
+            <a href="{{ url_for('product_detail', product_id=row.product.id) }}" class="text-decoration-none fw-semibold">
+              {{ row.product.name }}
+            </a>
+            <div class="text-muted small">{{ row.product.sku }}</div>
+          </td>
+          <td>
+            {% if row.product.stock <= row.product.min_stock %}
+              <span class="badge badge-soft-danger">{{ row.product.stock }}</span>
+            {% else %}
+              <span class="badge badge-soft-success">{{ row.product.stock }}</span>
+            {% endif %}
+          </td>
+          <td>{{ row.product.min_stock }}</td>
+          <td>{{ row.avg_out }}</td>
+          <td>
+            {% if row.days_left is not none %}
+              ~{{ row.days_left }} hari
+            {% else %}
+              <span class="text-muted">stabil</span>
+            {% endif %}
+          </td>
+          <td class="pe-4 fw-bold">{{ row.score }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">Belum ada produk. Tambahkan produk pertamamu!</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
