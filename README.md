@@ -84,22 +84,51 @@ dan `requirements.txt`.
    ```
 5. Buka `http://127.0.0.1:5000` di browser
 
-## Deploy demo gratis: Render + Neon PostgreSQL
+## Deploy gratis: PythonAnywhere
 
-1. Buat database PostgreSQL di Neon, lalu salin connection string pooled dari dashboard Neon.
-2. Buat repo GitHub private dan push kode aplikasi ke branch `main`.
-3. Hubungkan akun GitHub ke Render, pilih **New > Blueprint**, lalu pilih repo ini.
-   Render membaca `render.yaml` dan membuat web service gratis.
-4. Saat setup service diminta `DATABASE_URL`, isi connection string Neon.
-   Jangan masukkan connection string ke file yang di-commit.
-5. Setelah deploy selesai, buka URL Render. Akun admin pertama bisa dibuat melalui halaman registrasi.
+PythonAnywhere Beginner menyediakan satu web app dengan alamat
+`username.pythonanywhere.com`. Username tidak bisa diganti setelah akun dibuat,
+jadi coba gunakan `stokpintar` saat mendaftar jika masih tersedia; alternatifnya
+`stokpintarapp`. Paket gratis tidak memakai custom domain dan akses internet
+keluar dibatasi.
 
-Paket gratis Render ditujukan untuk demo: web service dapat tidur saat tidak aktif,
-dan filesystem-nya sementara. Karena itu database wajib memakai PostgreSQL eksternal,
-bukan SQLite di server. Render dan Neon dapat mengubah kuota atau ketentuan paket gratis;
-cek dashboard kedua layanan sebelum deploy. Isi `SECRET_KEY` dibuat otomatis oleh konfigurasi
-Blueprint. Jika notifikasi email diinginkan, tambahkan variabel SMTP dari `.env.example`
-melalui pengaturan Environment Render.
+1. Buat akun Beginner di [PythonAnywhere](https://www.pythonanywhere.com/registration/register/beginner/).
+2. Buka **Consoles > Bash** dan clone repo:
+   ```
+   git clone https://github.com/kenzobakpo123-cell/stokpintar.git
+   ```
+   Jika repo GitHub diatur private, gunakan mekanisme akses GitHub yang tersedia
+   di akun hosting atau unggah file proyek tanpa `.env`, `venv`, dan database lokal.
+3. Buat virtual environment dan pasang dependency:
+   ```
+   mkvirtualenv --python=/usr/bin/python3.13 stokpintar-venv
+   cd ~/stokpintar
+   pip install -r requirements.txt
+   ```
+4. Di PythonAnywhere, buka **Web > Add a new web app > Manual configuration**
+   dan pilih Python 3.13. Di bagian **Virtualenv**, isi
+   `/home/USERNAME/.virtualenvs/stokpintar-venv` (ganti `USERNAME` dengan username
+   PythonAnywhere).
+5. Buat file `~/stokpintar/.env` melalui halaman **Files**. Isi dengan `SECRET_KEY`
+   acak dan `DATABASE_URL=sqlite:///stokpintar.db`. Jangan unggah `.env` ke GitHub.
+   SQLite disimpan di akun hosting; jangan letakkan database di direktori sementara.
+6. Di halaman Web, buka file WSGI lalu ganti bagian Flask dengan:
+   ```
+   import sys
+   path = '/home/USERNAME/stokpintar'
+   if path not in sys.path:
+       sys.path.insert(0, path)
+
+   from app import app as application
+   ```
+   Ganti `USERNAME`, lalu tekan **Reload** di halaman Web.
+7. Buka `https://USERNAME.pythonanywhere.com` dan daftar sebagai admin pertama.
+
+Gunakan **Python 3.13** untuk virtual environment dan konfigurasi web app.
+Pada paket gratis, koneksi SMTP keluar dapat terhalang pembatasan jaringan;
+fitur stok tetap berjalan, tetapi notifikasi email mungkin tidak tersedia.
+Paket, kuota, dan kebijakan layanan dapat berubah—cek informasi terbaru
+PythonAnywhere sebelum deploy.
 
 ### Menjalankan tes
 
