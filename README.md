@@ -109,21 +109,4 @@ Jalankan dari folder proyek:
 python -m unittest discover -s tests -v
 ```
 
-## Poin yang Bisa Dijelaskan Saat Wawancara
 
-- **"Saya implementasi merge sort manual (bukan built-in) untuk mengurutkan
-  produk berdasarkan skor urgensi restock — kompleksitasnya O(n log n)."**
-- **"Untuk pencarian SKU, saya pakai binary search O(log n) karena data
-  sudah terurut, lebih efisien dibanding linear search kalau datanya besar."**
-- **"Prediksi stockout saya hitung pakai moving average dari transaksi 14
-  hari terakhir, supaya rekomendasi restock lebih akurat daripada cuma
-  lihat stok sekarang."**
-- **"Saya pisahkan logika algoritma (algorithms.py) dari model (models.py)
-  dan controller (app.py) supaya kode gampang dites & dijelaskan sendiri-sendiri."**
-- Keamanan: password di-hash, CSRF protection di semua form, rate limiting
-  di login, validasi input di server.
-
-## Pengembangan Lanjutan (opsional)
-
-- Tambah impor stok massal dengan pratinjau dan validasi file
-- Tambah notifikasi stok melalui WhatsApp atau integrasi aplikasi chat
